@@ -40,7 +40,7 @@
             var mobile = document.getElementById('l_mobile').value;
             var password = document.getElementById('l_password').value;
 
-            $.post(baseUrl + '/api_passenger_login.php', {'mobile_no':mobile, 'password':password}, function (results) {
+            $.post(baseUrl + '/api_driver_login.php', {'mobile_no':mobile, 'password':password}, function (results) {
                     var jsonObj = JSON.parse(results);
                     var return_code = (jsonObj.status[0].return_code);
                     if (return_code == 0) {
