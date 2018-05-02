@@ -14,8 +14,7 @@
       <div id="driver-status" class="controls">
           <b id="status-lbl">My Status: </b>
           <select id="status-opt">
-              <option value="Available">Available</option>
-              <option value="Unavailable" selected="selected">Not Available</option>
+              <option value="Booked" selected="selected">Booked</option>
           </select>
       </div>
       <input id="origin-input" class="controls" type="text" placeholder="Enter an origin location">
@@ -31,6 +30,14 @@
           var duration;
           var distance;
           var tripQuery;
+          
+          var p_mobile = localStorage.getItem("p_mobile");
+          var p_fname = localStorage.getItem("p_fname");
+          var p_lname = localStorage.getItem("p_lname");
+          var p_origin = localStorage.getItem("p_origin");
+          var p_dest = localStorage.getItem("p_destination");
+          var p_fare = localStorage.getItem("p_fare");
+          var p_paymode = localStorage.getItem("p_paymode");
           
           function initMap() {
               var origPlaceId;
@@ -91,7 +98,8 @@
                         var return_msg = (jsonObj.status[0].return_msg);
                         if (return_code == 0) {
                             window.alert("You changed your status to Available.");
-                            // Query every 10 seconds.
+                            // Call the function every 10 seconds.
+                            //tripQuery = setInterval(queryTripAPI(mobile), 10000);
                             var timer = setInterval(function() {
                                 var baseUrl = "https://betacars-webportal.000webhostapp.com";
                                 //var baseUrl = "https://imachatbot.cf";
@@ -102,15 +110,6 @@
                                     if (return_code == 0) {
                                         window.alert("Found a trip request!");
                                         clearInterval(timer);
-                                        localStorage.setItem("p_mobile",(jsonObj.data[0].passenger_mobile));
-                                        localStorage.setItem("p_fname",(jsonObj.data[0].passenger_fname));
-                                        localStorage.setItem("p_lname",(jsonObj.data[0].passenger_lname));
-                                        localStorage.setItem("p_origin",(jsonObj.data[0].origin));
-                                        localStorage.setItem("p_destination",(jsonObj.data[0].destination));
-                                        localStorage.setItem("p_fare",(jsonObj.data[0].fare));
-                                        localStorage.setItem("p_paymode",(jsonObj.data[0].payment_mode));
-                                        
-                                        window.location.href = "book.html"
                                     }
                                     else {
                                         window.alert("Nothing found!");
@@ -144,7 +143,27 @@
                 }
               }) 
           }
-                    
+          
+          // Function to send request to the querytrip API.
+          
+          function queryTripAPI(mobile) {
+            var baseUrl = "https://betacars-webportal.000webhostapp.com";
+              //var baseUrl = "https://imachatbot.cf";
+              $.post(baseUrl + '/api_driver_querytrip.php', {'mobile_no':mobile}, function (results) {
+                  var jsonObj = JSON.parse(results);
+                  var return_code = (jsonObj.status[0].return_code);
+
+                  if (jsonObj.hasOwnProperty('passenger_id')) {
+                      window.alert("Found a trip request!");
+                      clearInterval(tripQuery);
+                  }
+                  else {
+                      window.alert("Nothing found!");
+                  }
+              })
+          }
+          
+          
        /**
         * @constructor
        */
