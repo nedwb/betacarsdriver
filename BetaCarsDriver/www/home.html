@@ -23,6 +23,7 @@
       <div id="map"></div>
       
       <script>
+          var baseUrl = "https://betacars-webportal.000webhostapp.com";
           var mobile = localStorage.getItem("mobile");
           var origin_placeid;
           var destin_placeid;
@@ -73,10 +74,7 @@
           }
           
           // Updating driver status with position.
-          function updateDriverStatusWithPos(status) {
-              var baseUrl = "https://betacars-webportal.000webhostapp.com";
-              //var baseUrl = "https://imachatbot.cf";
-              
+          function updateDriverStatusWithPos(status) {              
               navigator.geolocation.getCurrentPosition(function(position) {
                   var pos = {
                       lat: position.coords.latitude,
@@ -93,8 +91,6 @@
                             window.alert("You changed your status to Available.");
                             // Query every 10 seconds.
                             var timer = setInterval(function() {
-                                var baseUrl = "https://betacars-webportal.000webhostapp.com";
-                                //var baseUrl = "https://imachatbot.cf";
                                 $.post(baseUrl + '/api_driver_querytrip.php', {'mobile_no':mobile}, function (results) {
                                     var jsonObj = JSON.parse(results);
                                     var return_code = (jsonObj.status[0].return_code);
@@ -110,6 +106,7 @@
                                         localStorage.setItem("p_fare",(jsonObj.data[0].fare));
                                         localStorage.setItem("p_paymode",(jsonObj.data[0].payment_mode));
                                         
+                                        // Redirect to the booked page.
                                         window.location.href = "book.html"
                                     }
                                     else {
@@ -126,10 +123,7 @@
             }
              
           // Updating driver status to unavailable (position not needed).
-          function updateDriverStatus(status) {
-              var baseUrl = "https://betacars-webportal.000webhostapp.com";
-              //var baseUrl = "https://imachatbot.cf";
-                                 
+          function updateDriverStatus(status) {                
               $.post(baseUrl + '/api_driver_status.php', {'mobile_no':mobile, 'status':status, 'pos':'0,0'}, function (results) {
                 var jsonObj = JSON.parse(results);
                 var return_code = (jsonObj.status[0].return_code);
@@ -184,17 +178,6 @@
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(originInput);
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(destinationInput);
         }
-                           
-        // Sets a listener on a radio button to change the filter type on Places
-        // Autocomplete.
-        AutocompleteDirectionsHandler.prototype.setupClickListener = function(id, mode) {
-            var radioButton = document.getElementById(id);
-            var me = this;
-            radioButton.addEventListener('click', function() {
-                me.travelMode = mode;
-                me.route();
-            });
-        };
 
         AutocompleteDirectionsHandler.prototype.setupPlaceChangedListener = function(autocomplete, mode) {
             var me = this;

@@ -30,6 +30,7 @@
           var duration;
           var distance;
           var tripQuery;
+          var marker;
           
           var p_mobile = localStorage.getItem("p_mobile");
           var p_fname = localStorage.getItem("p_fname");
@@ -48,12 +49,13 @@
                   zoom: 15,
                   fullscreenControl: false
               });
-              
+                      
               navigator.geolocation.getCurrentPosition(function(position) {
                   var pos = {
                       lat: position.coords.latitude,
                       lng: position.coords.longitude
                   };
+                  
                   map.setCenter(pos);
                   
                   // Capture the origin position coordinates.
@@ -73,11 +75,84 @@
                       } else {
                           window.alert('Geocoder failed due to ' + status);
                       }
+                  
+                        // Use Geocoder to get destination address and fill out the origin text box.
+                        var dest_fields = p_origin.split(',');
+                  
+                        var geocoder_dest = new google.maps.Geocoder;
+                        var latlng_dest = {lat: parseFloat(dest_fields[0]), lng: parseFloat(dest_fields[1])};
+                        geocoder.geocode({'location': latlng_dest}, function(results, status) {
+                        if (status === 'OK') {
+                          if (results[0]) {
+                              document.getElementById('destination-input').value = results[0].formatted_address;
+                              destin_placeid = results[0].place_id;
+                          } else {
+                              window.alert('No results found.');
+                          }
+                      } else {
+                          window.alert('Geocoder failed due to ' + status);
+                      }
+                      new AutocompleteDirectionsHandler(map);
                   });
+                }); 
+                marker = new google.maps.Marker({
+                  position: pos,
+                  map: map,
+                  title: "Test "
+                });
               });
               
-              new AutocompleteDirectionsHandler(map);
+                var positionTimer = navigator.geolocation.watchPosition(
+                function (position) {
+                    setMarkerPosition(
+                        marker,
+                        position
+                    );
+                });
           }
+          
+        // current position of the user
+        function setCurrentPosition(pos) {
+            currentPositionMarker = new google.maps.Marker({
+                map: map,
+                position: new google.maps.LatLng(
+                    pos.coords.latitude,
+                    pos.coords.longitude
+                ),
+                title: "Current Position"
+            });
+            map.panTo(new google.maps.LatLng(
+                    pos.coords.latitude,
+                    pos.coords.longitude
+                ));
+        }
+
+        function displayAndWatch(position) {
+
+            // set current position
+            setCurrentPosition(position);
+
+            // watch position
+            watchCurrentPosition();
+        }
+
+        function watchCurrentPosition() {
+            var positionTimer = navigator.geolocation.watchPosition(
+                function (position) {
+                    setMarkerPosition(
+                        currentPositionMarker,
+                        position
+                    );
+                });
+        }
+
+        function setMarkerPosition(marker, position) {
+            marker.setPosition(
+                new google.maps.LatLng(
+                    position.coords.latitude,
+                    position.coords.longitude)
+            );
+        }
           
           // Updating driver status with position.
           function updateDriverStatusWithPos(status) {
@@ -98,11 +173,10 @@
                         var return_msg = (jsonObj.status[0].return_msg);
                         if (return_code == 0) {
                             window.alert("You changed your status to Available.");
+                            
                             // Call the function every 10 seconds.
-                            //tripQuery = setInterval(queryTripAPI(mobile), 10000);
                             var timer = setInterval(function() {
                                 var baseUrl = "https://betacars-webportal.000webhostapp.com";
-                                //var baseUrl = "https://imachatbot.cf";
                                 $.post(baseUrl + '/api_driver_querytrip.php', {'mobile_no':mobile}, function (results) {
                                     var jsonObj = JSON.parse(results);
                                     var return_code = (jsonObj.status[0].return_code);
@@ -163,7 +237,6 @@
               })
           }
           
-          
        /**
         * @constructor
        */
@@ -179,74 +252,29 @@
             this.directionsDisplay = new google.maps.DirectionsRenderer;
             this.directionsDisplay.setMap(map);
 
-            var originAutocomplete = new google.maps.places.Autocomplete(
-                originInput, {placeIdOnly: true});
-            var destinationAutocomplete = new google.maps.places.Autocomplete(
-                destinationInput, {placeIdOnly: true});
-
-            this.setupPlaceChangedListener(originAutocomplete, 'ORIG');
-            this.setupPlaceChangedListener(destinationAutocomplete, 'DEST');
-
             // Handle changing of the driver status.
             var onChangeHandler = function() {
+                var me = this;
                 var new_value = document.getElementById('status-opt').value;
                 if (new_value == "Available") {
                     updateDriverStatusWithPos(new_value);
                 }
                 else {
                     updateDriverStatus(new_value);
-                }
+                }  
             };
             document.getElementById('status-opt').addEventListener('change', onChangeHandler);
             
             this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(driverstatus);
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(originInput);
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(destinationInput);
+            this.route();
         }
-                           
-        // Sets a listener on a radio button to change the filter type on Places
-        // Autocomplete.
-        AutocompleteDirectionsHandler.prototype.setupClickListener = function(id, mode) {
-            var radioButton = document.getElementById(id);
+
+        AutocompleteDirectionsHandler.prototype.route = function() {       
             var me = this;
-            radioButton.addEventListener('click', function() {
-                me.travelMode = mode;
-                me.route();
-            });
-        };
-
-        AutocompleteDirectionsHandler.prototype.setupPlaceChangedListener = function(autocomplete, mode) {
-            var me = this;
-            autocomplete.bindTo('bounds', this.map);
-            autocomplete.addListener('place_changed', function() {
-                var place = autocomplete.getPlace();
-                if (!place.place_id) {
-                    window.alert("Please select an option from the dropdown list.");
-                    return;
-                }
-                if (mode === 'ORIG') {
-                    me.originPlaceId = place.place_id;
-                } else {
-                    me.destinationPlaceId = place.place_id;
-                }
-                me.route();
-            });
-
-        };
-
-        AutocompleteDirectionsHandler.prototype.route = function() {
-            if (!this.originPlaceId) {
-                this.originPlaceId = origin_placeid;
-            }
-            if (!this.originPlaceId || !this.destinationPlaceId) {
-                return;
-            }
-
-            // Capture the places ID to be sent to the API.
-            origin_placeid = this.originPlaceId;
-            destin_placeid = this.destinationPlaceId;
-
-            var me = this;
+            this.originPlaceId = origin_placeid;
+            this.destinationPlaceId = destin_placeid;
             this.directionsService.route({
                 origin: {'placeId': this.originPlaceId},
                 destination: {'placeId': this.destinationPlaceId},
