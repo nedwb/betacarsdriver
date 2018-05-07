@@ -14,7 +14,7 @@
       <div id="driver-status" class="controls">
           <b id="status-lbl">My Status: </b>
           <select id="status-opt">
-              <option value="Booked" selected="selected">Booked</option>
+              <option value="Booked" selected="selected">On Trip</option>
           </select>
       </div>
       <input id="origin-input" class="controls" type="text" placeholder="Enter an origin location">
@@ -22,8 +22,10 @@
       
       <label id="passenger-name" class="controls">Passenger: </label>
       <label id="passenger-contact" class="controls">Contact No: </label>
+      <label id="pay-mode" class="controls">Payment Mode: </label>
+      <label id="fare" class="controls">Fixed Fare: </label>
       
-       <button id="btnStart" onclick="btnStartClicked" class="controls_btn">Start Trip</button>
+       <button id="btnEnd" onclick="btnEndClicked()" class="controls_btn">End Trip</button>
       
       <div id="map"></div>
       
@@ -44,6 +46,8 @@
           
           document.getElementById('passenger-name').innerHTML = "Name: " + p_fname + " " + p_lname;
           document.getElementById('passenger-contact').innerHTML = "Contact No: " + p_mobile;
+          document.getElementById('pay-mode').innerHTML = "Payment Mode: " + p_paymode;
+          document.getElementById('fare').innerHTML = "Fixed Fare: " + p_fare;
           
           function initMap() {
               // Get your current position coordinates.
@@ -102,7 +106,7 @@
                   }
                   
                   // Use Geocoder to get destination address and fill out the origin text box.
-                  var dest_fields = p_origin.split(',');
+                  var dest_fields = p_dest.split(',');
                   var latlng_dest = {lat: parseFloat(dest_fields[0]), lng: parseFloat(dest_fields[1])};
                   geocoder.geocode({'location': latlng_dest}, function(results, status) {
                       if (status === 'OK') {
@@ -145,20 +149,12 @@
               return navigator.geolocation.watchPosition (onMapWatchSuccess, onMapError, { enableHighAccuracy: true });
           }
           
-          function btnStartClicked(input) {
-              //localStorage.setItem("p_mobile",(jsonObj.data[0].passenger_mobile));
-              //localStorage.setItem("p_fname",(jsonObj.data[0].passenger_fname));
-              //localStorage.setItem("p_lname",(jsonObj.data[0].passenger_lname));
-              //localStorage.setItem("p_origin",(jsonObj.data[0].origin));
-              //localStorage.setItem("p_destination",(jsonObj.data[0].destination));
-              //localStorage.setItem("p_fare",(jsonObj.data[0].fare));
-              //localStorage.setItem("p_paymode",(jsonObj.data[0].payment_mode));
-              
+          function btnEndClicked(input) {    
               // Redirect to the on trip page.
-              window.location.href = "./ontrip.html";
+              window.alert("Trip successfully completed.");
+              window.location.href = "home.html";
           }
           
-       
        /**
         * @constructor
        */
@@ -172,7 +168,9 @@
             var driverstatus = document.getElementById('driver-status');
             var pname = document.getElementById('passenger-name');
             var pmobile = document.getElementById('passenger-contact');
-            var startbutton = document.getElementById('btnStart');
+            var startbutton = document.getElementById('btnEnd');
+            var paymode = document.getElementById('pay-mode');
+            var fare = document.getElementById('fare');
             
             this.directionsService = new google.maps.DirectionsService;
             this.directionsDisplay = new google.maps.DirectionsRenderer;
@@ -183,6 +181,9 @@
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(originInput);
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(destinationInput);
             
+
+            this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(fare);
+            this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(paymode);
             this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(pmobile);
             this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(pname);
             this.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(startbutton);
