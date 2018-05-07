@@ -23,15 +23,6 @@
       
       <script>
           var mobile = localStorage.getItem("mobile");
-          var origin_placeid;
-          var destin_placeid;
-          var origin_position;
-          var destin_position;
-          var duration;
-          var distance;
-          var tripQuery;
-          var marker;
-          
           var p_mobile = localStorage.getItem("p_mobile");
           var p_fname = localStorage.getItem("p_fname");
           var p_lname = localStorage.getItem("p_lname");
@@ -40,49 +31,72 @@
           var p_fare = localStorage.getItem("p_fare");
           var p_paymode = localStorage.getItem("p_paymode");
           
+          var origin_placeid;
+          var destin_placeid;
+          var origin_position;
+          var destin_position;
+          
           function initMap() {
-              var origPlaceId;
+              // Get your current position coordinates.
+              getMapLocation();
+          }
+          
+          // Get current geolocation coordinates.
+          function getMapLocation() {
+              navigator.geolocation.getCurrentPosition(onMapSuccess, onMapError, { enableHighAccuracy:true }); 
+          }
+          
+          // Success callback for getting the coordinates.
+          var onMapSuccess = function(position) {
+              Latitude = position.coords.latitude;
+              Longitude = position.coords.longitude;
               
-              var map = new google.maps.Map(document.getElementById('map'), {
+              // Capture the origin position coordinates.
+              origin_position = position.coords.latitude + "," + position.coords.longitude;
+              getMap(Latitude, Longitude);
+          }
+          
+          // Get map by using coordinates
+          function getMap(latitude, longitude) {
+              var geocoder = new google.maps.Geocoder;
+              var mapOptions = {
                   mapTypeControl: false,
-                  center: {lat: 14.5995, lng: 120.9842},
-                  zoom: 15,
-                  fullscreenControl: false
+                  fullscreenControl: false,
+                  center: new google.maps.LatLng(0, 0),
+                  zoom: 1,
+                  mapTypeId: google.maps.MapTypeId.ROADMAP
+              };
+              
+              map = new google.maps.Map(document.getElementById("map"), mapOptions);
+              var latLong = new google.maps.LatLng(latitude, longitude);
+              var marker = new google.maps.Marker({
+                  position: latLong
               });
-                      
-              navigator.geolocation.getCurrentPosition(function(position) {
-                  var pos = {
-                      lat: position.coords.latitude,
-                      lng: position.coords.longitude
-                  };
-                  
-                  map.setCenter(pos);
-                  
-                  // Capture the origin position coordinates.
-                  origin_position = position.coords.latitude + "," + position.coords.longitude;
-                  
-                  // Use Geocoder to get current address and fill out the origin text box.
-                  var geocoder = new google.maps.Geocoder;
-                  var latlng = {lat: position.coords.latitude, lng: position.coords.longitude};
-                  geocoder.geocode({'location': latlng}, function(results, status) {
-                      if (status === 'OK') {
-                          if (results[0]) {
-                              document.getElementById('origin-input').value = results[0].formatted_address;
-                              origin_placeid = results[0].place_id;
-                          } else {
-                              window.alert('No results found.');
-                          }
+              
+              marker.setMap(map);
+              map.setZoom(15);
+              map.setCenter(marker.getPosition());
+              
+              // Use Geocoder to get current address and fill out the origin text box.
+              var latlng = {lat: latitude, lng: longitude};
+              
+              geocoder.geocode({'location': latlng}, function(results, status) {
+                  if (status === 'OK') {
+                      if (results[0]) {
+                          document.getElementById('origin-input').value = results[0].formatted_address;
+                          origin_placeid = results[0].place_id;
                       } else {
-                          window.alert('Geocoder failed due to ' + status);
+                          window.alert('No results found.');
                       }
+                  } else {
+                      window.alert('Geocoder failed due to ' + status);
+                  }
                   
-                        // Use Geocoder to get destination address and fill out the origin text box.
-                        var dest_fields = p_origin.split(',');
-                  
-                        var geocoder_dest = new google.maps.Geocoder;
-                        var latlng_dest = {lat: parseFloat(dest_fields[0]), lng: parseFloat(dest_fields[1])};
-                        geocoder.geocode({'location': latlng_dest}, function(results, status) {
-                        if (status === 'OK') {
+                  // Use Geocoder to get destination address and fill out the origin text box.
+                  var dest_fields = p_origin.split(',');
+                  var latlng_dest = {lat: parseFloat(dest_fields[0]), lng: parseFloat(dest_fields[1])};
+                  geocoder.geocode({'location': latlng_dest}, function(results, status) {
+                      if (status === 'OK') {
                           if (results[0]) {
                               document.getElementById('destination-input').value = results[0].formatted_address;
                               destin_placeid = results[0].place_id;
@@ -92,152 +106,36 @@
                       } else {
                           window.alert('Geocoder failed due to ' + status);
                       }
+                      
+                      // Call the auto directions handler.
                       new AutocompleteDirectionsHandler(map);
-                  });
-                }); 
-                marker = new google.maps.Marker({
-                  position: pos,
-                  map: map,
-                  title: "Test "
-                });
+                  }); 
               });
+          }
+          
+          // Success callback for watching your changing position
+          var onMapWatchSuccess = function (position) {
+              var updatedLatitude = position.coords.latitude;
+              var updatedLongitude = position.coords.longitude;
               
-                var positionTimer = navigator.geolocation.watchPosition(
-                function (position) {
-                    setMarkerPosition(
-                        marker,
-                        position
-                    )
-                },
-                { enableHighAccuracy: true });
+              if (updatedLatitude != Latitude && updatedLongitude != Longitude) {
+                  Latitude = updatedLatitude;
+                  Longitude = updatedLongitude;
+                  
+                  getMap(updatedLatitude, updatedLongitude);
+              }
           }
-          
-        // current position of the user
-        function setCurrentPosition(pos) {
-            currentPositionMarker = new google.maps.Marker({
-                map: map,
-                position: new google.maps.LatLng(
-                    pos.coords.latitude,
-                    pos.coords.longitude
-                ),
-                title: "Current Position"
-            });
-            map.panTo(new google.maps.LatLng(
-                    pos.coords.latitude,
-                    pos.coords.longitude
-                ));
-        }
 
-        function displayAndWatch(position) {
-
-            // set current position
-            setCurrentPosition(position);
-
-            // watch position
-            watchCurrentPosition();
-        }
-
-        function watchCurrentPosition() {
-            var positionTimer = navigator.geolocation.watchPosition(
-                function (position) {
-                    setMarkerPosition(
-                        currentPositionMarker,
-                        position
-                    );
-                });
-        }
-
-        function setMarkerPosition(marker, position) {
-            marker.setPosition(
-                new google.maps.LatLng(
-                    position.coords.latitude,
-                    position.coords.longitude)
-            );
-        }
-          
-          // Updating driver status with position.
-          function updateDriverStatusWithPos(status) {
-              var baseUrl = "https://betacars-webportal.000webhostapp.com";
-              //var baseUrl = "https://imachatbot.cf";
-              
-              navigator.geolocation.getCurrentPosition(function(position) {
-                  var pos = {
-                      lat: position.coords.latitude,
-                      lng: position.coords.longitude
-                  };
-                  // Capture the origin position coordinates.
-                  origin_position = position.coords.latitude + "," + position.coords.longitude;
-                                    
-                  $.post(baseUrl + '/api_driver_status.php', {'mobile_no':mobile, 'status':status, 'pos':origin_position}, function (results) {
-                        var jsonObj = JSON.parse(results);
-                        var return_code = (jsonObj.status[0].return_code);
-                        var return_msg = (jsonObj.status[0].return_msg);
-                        if (return_code == 0) {
-                            window.alert("You changed your status to Available.");
-                            
-                            // Call the function every 10 seconds.
-                            var timer = setInterval(function() {
-                                var baseUrl = "https://betacars-webportal.000webhostapp.com";
-                                $.post(baseUrl + '/api_driver_querytrip.php', {'mobile_no':mobile}, function (results) {
-                                    var jsonObj = JSON.parse(results);
-                                    var return_code = (jsonObj.status[0].return_code);
-
-                                    if (return_code == 0) {
-                                        window.alert("Found a trip request!");
-                                        clearInterval(timer);
-                                    }
-                                    else {
-                                        window.alert("Nothing found!");
-                                    }
-                                })
-                            }, 10000);
-                        }
-                        else {
-                            window.alert("Status change failed.");
-                        }
-                   })
-               });
-            }
-             
-          // Updating driver status to unavailable (position not needed).
-          function updateDriverStatus(status) {
-              var baseUrl = "https://betacars-webportal.000webhostapp.com";
-              //var baseUrl = "https://imachatbot.cf";
-                                 
-              $.post(baseUrl + '/api_driver_status.php', {'mobile_no':mobile, 'status':status, 'pos':'0,0'}, function (results) {
-                var jsonObj = JSON.parse(results);
-                var return_code = (jsonObj.status[0].return_code);
-                var return_msg = (jsonObj.status[0].return_msg);
-
-                if (return_code == 0) {
-                    window.alert("You have changed status to NOT Available.");
-                    clearInterval(tripQuery);
-                }
-                else {
-                    window.alert("Status change failed.");
-                }
-              }) 
+          // Error callback
+          function onMapError(error) {
+              window.alert("Error getting map.");
           }
-          
-          // Function to send request to the querytrip API.
-          
-          function queryTripAPI(mobile) {
-            var baseUrl = "https://betacars-webportal.000webhostapp.com";
-              //var baseUrl = "https://imachatbot.cf";
-              $.post(baseUrl + '/api_driver_querytrip.php', {'mobile_no':mobile}, function (results) {
-                  var jsonObj = JSON.parse(results);
-                  var return_code = (jsonObj.status[0].return_code);
 
-                  if (jsonObj.hasOwnProperty('passenger_id')) {
-                      window.alert("Found a trip request!");
-                      clearInterval(tripQuery);
-                  }
-                  else {
-                      window.alert("Nothing found!");
-                  }
-              })
+          // Watch your changing position
+          function watchMapPosition() {
+              return navigator.geolocation.watchPosition (onMapWatchSuccess, onMapError, { enableHighAccuracy: true });
           }
-          
+       
        /**
         * @constructor
        */
@@ -252,20 +150,7 @@
             this.directionsService = new google.maps.DirectionsService;
             this.directionsDisplay = new google.maps.DirectionsRenderer;
             this.directionsDisplay.setMap(map);
-
-            // Handle changing of the driver status.
-            var onChangeHandler = function() {
-                var me = this;
-                var new_value = document.getElementById('status-opt').value;
-                if (new_value == "Available") {
-                    updateDriverStatusWithPos(new_value);
-                }
-                else {
-                    updateDriverStatus(new_value);
-                }  
-            };
-            document.getElementById('status-opt').addEventListener('change', onChangeHandler);
-            
+           
             this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(driverstatus);
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(originInput);
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(destinationInput);
