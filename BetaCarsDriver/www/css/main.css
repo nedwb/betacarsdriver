@@ -43,17 +43,52 @@ html, body {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-      .controls_btn {
-        margin-top: 10px;
-        border: 1px solid transparent;
-        border-radius: 2px 0 0 2px;
-        box-sizing: border-box;
-        height: 32px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-      }
+.controls_btn {
+    margin-top: 10px;
+    border: 1px solid transparent;
+    border-radius: 2px 0 0 2px;
+    box-sizing: border-box;
+    height: 32px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#passenger-contact{
+    background-color: #fff;
+    font-family: Roboto;
+    font-size: 17px;
+    font-weight: 300;
+    margin-left: 10px;
+    margin-bottom:60px;
+    padding: 0 11px 0 13px;
+    text-overflow: ellipsis;
+    width: 300px;
+}
+
+#passenger-name{
+    background-color: #fff;
+    font-family: Roboto;
+    font-size: 17px;
+    font-weight: 300;
+    margin-left: 10px;
+    margin-bottom:0px;
+    padding: 0 11px 0 13px;
+    text-overflow: ellipsis;
+    width: 300px;
+}
+
+#btnStart {
+    background-color: #fff;
+    font-family: Roboto;
+    font-size: 15px;
+    font-weight: 300;
+    margin-bottom: 20px;
+    padding: 0 11px 0 13px;
+    text-overflow: ellipsis;
+    width: 115px;
+}
 
 #status-lbl,
-#status-opt {
+#status-opt{
     background-color: #fff;
     font-family: Roboto;
     font-size: 17px;

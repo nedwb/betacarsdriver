@@ -23,7 +23,7 @@
       <label id="passenger-name" class="controls">Passenger: </label>
       <label id="passenger-contact" class="controls">Contact No: </label>
       
-      <button id="btnStart" onclick="btnStartClicked()" class="controls_btn">Start Trip</button>
+       <button id="btnStart" onclick="btnStartClicked" class="controls_btn">Start Trip</button>
       
       <div id="map"></div>
       
@@ -145,8 +145,17 @@
               return navigator.geolocation.watchPosition (onMapWatchSuccess, onMapError, { enableHighAccuracy: true });
           }
           
-          function btnStartClicked() {
-              window.location.href = "ontrip.html";
+          function btnStartClicked(input) {
+              //localStorage.setItem("p_mobile",(jsonObj.data[0].passenger_mobile));
+              //localStorage.setItem("p_fname",(jsonObj.data[0].passenger_fname));
+              //localStorage.setItem("p_lname",(jsonObj.data[0].passenger_lname));
+              //localStorage.setItem("p_origin",(jsonObj.data[0].origin));
+              //localStorage.setItem("p_destination",(jsonObj.data[0].destination));
+              //localStorage.setItem("p_fare",(jsonObj.data[0].fare));
+              //localStorage.setItem("p_paymode",(jsonObj.data[0].payment_mode));
+              
+              // Redirect to the on trip page.
+              window.location.href = "./ontrip.html";
           }
           
        
