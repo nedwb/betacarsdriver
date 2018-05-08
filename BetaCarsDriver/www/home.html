@@ -31,7 +31,11 @@
           var destin_position;
           var duration;
           var distance;
-          var tripQuery;
+          var timer;
+          
+          var parameter = window.location.search.substring(1).split("=");
+          var status = parameter[1];
+          document.getElementById('status-opt').value = status;
           
           function initMap() {
               var origPlaceId;
@@ -90,14 +94,16 @@
                         if (return_code == 0) {
                             window.alert("You changed your status to Available.");
                             // Query every 10 seconds.
-                            var timer = setInterval(function() {
+                            timer = setInterval(function() {
                                 $.post(baseUrl + '/api_driver_querytrip.php', {'mobile_no':mobile}, function (results) {
                                     var jsonObj = JSON.parse(results);
                                     var return_code = (jsonObj.status[0].return_code);
-
+                                    var return_message = (jsonObj.status[0].return_msg);
+                                    
                                     if (return_code == 0) {
                                         window.alert("Found a trip request!");
                                         clearInterval(timer);
+                                        localStorage.setItem("trip_id",(jsonObj.data[0].trip_id));
                                         localStorage.setItem("p_mobile",(jsonObj.data[0].passenger_mobile));
                                         localStorage.setItem("p_fname",(jsonObj.data[0].passenger_fname));
                                         localStorage.setItem("p_lname",(jsonObj.data[0].passenger_lname));
@@ -110,7 +116,8 @@
                                         window.location.href = "book.html"
                                     }
                                     else {
-                                        window.alert("Nothing found!");
+                                        //window.alert("Nothing found!");
+                                        window.alert(return_message);
                                     }
                                 })
                             }, 10000);
@@ -131,7 +138,7 @@
 
                 if (return_code == 0) {
                     window.alert("You have changed status to NOT Available.");
-                    clearInterval(tripQuery);
+                    clearInterval(timer);
                 }
                 else {
                     window.alert("Status change failed.");

@@ -46,7 +46,7 @@
                     if (return_code == 0) {
                         window.alert("Welcome to Beta Cars, " + jsonObj.data[0].f_name + " " + jsonObj.data[0].l_name + "!");
                         localStorage.setItem("mobile",mobile);
-                        window.location.href = "home.html";
+                        window.location.href = "home.html?status=Unavailable";
                     }
                     else if(return_code == 1) {
                         window.alert("Mobile no. is not registered. Please sign up.");

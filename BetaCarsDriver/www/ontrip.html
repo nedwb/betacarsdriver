@@ -15,6 +15,7 @@
           <b id="status-lbl">My Status: </b>
           <select id="status-opt">
               <option value="Booked" selected="selected">On Trip</option>
+              <option value="EndTrip">End Trip</option>
           </select>
       </div>
       <input id="origin-input" class="controls" type="text" placeholder="Enter an origin location">
@@ -24,8 +25,6 @@
       <label id="passenger-contact" class="controls">Contact No: </label>
       <label id="pay-mode" class="controls">Payment Mode: </label>
       <label id="fare" class="controls">Fixed Fare: </label>
-      
-       <button id="btnEnd" onclick="btnEndClicked()" class="controls_btn">End Trip</button>
       
       <div id="map"></div>
       
@@ -148,11 +147,22 @@
           function watchMapPosition() {
               return navigator.geolocation.watchPosition (onMapWatchSuccess, onMapError, { enableHighAccuracy: true });
           }
-          
-          function btnEndClicked(input) {    
-              // Redirect to the on trip page.
-              window.alert("Trip successfully completed.");
-              window.location.href = "home.html";
+  
+          // Function to update trip status.
+          function changeTripStatus(status) {
+              $.post(baseUrl + '/api_trip_status.php', {'mobile_no':mobile, 'status':status, 'pos':'0,0'}, function (results) {
+                  var jsonObj = JSON.parse(results);
+                  var return_code = (jsonObj.status[0].return_code);
+                  var return_msg = (jsonObj.status[0].return_msg);
+
+                  if (return_code == 0) {
+                      window.alert("Trip completed.");
+                      window.location.href = "home.html?status=Available";
+                  }
+                  else {
+                      window.alert("Status change failed.");
+                  }
+              });
           }
           
        /**
@@ -168,7 +178,7 @@
             var driverstatus = document.getElementById('driver-status');
             var pname = document.getElementById('passenger-name');
             var pmobile = document.getElementById('passenger-contact');
-            var startbutton = document.getElementById('btnEnd');
+            //var startbutton = document.getElementById('btnEnd');
             var paymode = document.getElementById('pay-mode');
             var fare = document.getElementById('fare');
             
@@ -181,12 +191,21 @@
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(originInput);
             this.map.controls[google.maps.ControlPosition.LEFT_TOP].push(destinationInput);
             
-
             this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(fare);
             this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(paymode);
             this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(pmobile);
             this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(pname);
-            this.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(startbutton);
+            //this.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(startbutton);
+            
+            // Handle changing of the driver status.
+            var onChangeHandler = function() {
+                var new_value = document.getElementById('status-opt').value;
+                if (new_value == "EndTrip") {
+                    changeTripStatus("Complete");
+                }
+            };
+            
+            document.getElementById('status-opt').addEventListener('change', onChangeHandler);
             
             this.route();
         }

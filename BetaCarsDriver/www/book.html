@@ -15,6 +15,7 @@
           <b id="status-lbl">My Status: </b>
           <select id="status-opt">
               <option value="Booked" selected="selected">Booked</option>
+              <option value="StartTrip">Start Trip</option>
           </select>
       </div>
       <input id="origin-input" class="controls" type="text" placeholder="Enter an origin location">
@@ -22,12 +23,12 @@
       
       <label id="passenger-name" class="controls">Passenger: </label>
       <label id="passenger-contact" class="controls">Contact No: </label>
-      
-      <button id="btnStart" onclick="btnStartClicked()" class="controls_btn">Start Trip</button>
-      
+            
       <div id="map"></div>
       
       <script>
+          var baseUrl = "https://betacars-webportal.000webhostapp.com";
+          var trip_id = localStorage.getItem("trip_id");
           var mobile = localStorage.getItem("mobile");
           var p_mobile = localStorage.getItem("p_mobile");
           var p_fname = localStorage.getItem("p_fname");
@@ -144,12 +145,24 @@
           function watchMapPosition() {
               return navigator.geolocation.watchPosition (onMapWatchSuccess, onMapError, { enableHighAccuracy: true });
           }
-          
-          function btnStartClicked() {
-              window.location.href = "ontrip.html";
+                    
+          // Function to update trip status.
+          function changeTripStatus(status) {
+              $.post(baseUrl + '/api_trip_status.php', {'mobile_no':mobile, 'status':status, 'pos':'0,0'}, function (results) {
+                  var jsonObj = JSON.parse(results);
+                  var return_code = (jsonObj.status[0].return_code);
+                  var return_msg = (jsonObj.status[0].return_msg);
+
+                  if (return_code == 0) {
+                      window.alert("You have changed status to On Trip.");
+                      window.location.href = "ontrip.html";
+                  }
+                  else {
+                      window.alert("Status change failed.");
+                  }
+              });
           }
           
-       
        /**
         * @constructor
        */
@@ -163,7 +176,7 @@
             var driverstatus = document.getElementById('driver-status');
             var pname = document.getElementById('passenger-name');
             var pmobile = document.getElementById('passenger-contact');
-            var startbutton = document.getElementById('btnStart');
+            //var startbutton = document.getElementById('btnStart');
             
             this.directionsService = new google.maps.DirectionsService;
             this.directionsDisplay = new google.maps.DirectionsRenderer;
@@ -176,7 +189,17 @@
             
             this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(pmobile);
             this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(pname);
-            this.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(startbutton);
+            //this.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(startbutton);
+            
+            // Handle changing of the driver status.
+            var onChangeHandler = function() {
+                var new_value = document.getElementById('status-opt').value;
+                if (new_value == "StartTrip") {
+                    changeTripStatus("On Trip");
+                }
+            };
+            
+            document.getElementById('status-opt').addEventListener('change', onChangeHandler);
             
             this.route();
         }

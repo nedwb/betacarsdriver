@@ -58,7 +58,7 @@ html, body {
     font-size: 17px;
     font-weight: 300;
     margin-left: 10px;
-    margin-bottom:60px;
+    margin-bottom:10px;
     padding: 0 11px 0 13px;
     text-overflow: ellipsis;
     width: 300px;
@@ -76,18 +76,6 @@ html, body {
     padding: 0 11px 0 13px;
     text-overflow: ellipsis;
     width: 300px;
-}
-
-#btnStart,
-#btnEnd {
-    background-color: #fff;
-    font-family: Roboto;
-    font-size: 15px;
-    font-weight: 300;
-    margin-bottom: 20px;
-    padding: 0 11px 0 13px;
-    text-overflow: ellipsis;
-    width: 115px;
 }
 
 #status-lbl,
