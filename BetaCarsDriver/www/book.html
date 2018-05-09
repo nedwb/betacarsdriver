@@ -147,15 +147,30 @@
           }
                     
           // Function to update trip status.
-          function changeTripStatus(status) {
-              $.post(baseUrl + '/api_trip_status.php', {'mobile_no':mobile, 'status':status, 'pos':'0,0'}, function (results) {
+          function changeDriverTripStatus() {
+              var driver_stat = "On%Trip";
+              var trip_stat = "In%Progress";
+              
+              // Update the driver status.
+              $.post(baseUrl + '/api_driver_status.php', {'mobile_no':mobile, 'status':driver_stat, 'pos':"0"}, function (results) {
                   var jsonObj = JSON.parse(results);
                   var return_code = (jsonObj.status[0].return_code);
                   var return_msg = (jsonObj.status[0].return_msg);
-
                   if (return_code == 0) {
-                      window.alert("You have changed status to On Trip.");
-                      window.location.href = "ontrip.html";
+                      // Update the trip status.                      
+                      $.post(baseUrl + '/api_trip_status.php', {'who': "driver", 'mobile_no':mobile, 'trip_id': trip_id, 'status':trip_stat}, function (results) {
+                          var jsonObj = JSON.parse(results);
+                          var return_code = (jsonObj.status[0].return_code);
+                          var return_msg = (jsonObj.status[0].return_msg);
+                          
+                          if (return_code == 0) {
+                              window.alert("You have changed status to On Trip.");
+                              window.location.href = "ontrip.html";
+                          }
+                          else {
+                              window.alert("Status change failed. Trip table update.");
+                          }
+                      });
                   }
                   else {
                       window.alert("Status change failed.");
@@ -195,7 +210,7 @@
             var onChangeHandler = function() {
                 var new_value = document.getElementById('status-opt').value;
                 if (new_value == "StartTrip") {
-                    changeTripStatus("On Trip");
+                    changeDriverTripStatus();
                 }
             };
             

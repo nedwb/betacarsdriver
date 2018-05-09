@@ -14,7 +14,7 @@
       <div id="driver-status" class="controls">
           <b id="status-lbl">My Status: </b>
           <select id="status-opt">
-              <option value="Booked" selected="selected">On Trip</option>
+              <option value="OnTrip" selected="selected">On Trip</option>
               <option value="EndTrip">End Trip</option>
           </select>
       </div>
@@ -30,6 +30,7 @@
       
       <script>
           var baseUrl = "http://www.betacars.net"
+          var trip_id = localStorage.getItem("trip_id");
           var mobile = localStorage.getItem("mobile");
           var p_mobile = localStorage.getItem("p_mobile");
           var p_fname = localStorage.getItem("p_fname");
@@ -150,22 +151,37 @@
           }
   
           // Function to update trip status.
-          function changeTripStatus(status) {
-              $.post(baseUrl + '/api_trip_status.php', {'mobile_no':mobile, 'status':status, 'pos':'0,0'}, function (results) {
+          function changeDriverTripStatus(status) {
+              var driver_stat = "Available";
+              var trip_stat = status;
+              
+              // Update the driver status.
+              $.post(baseUrl + '/api_driver_status.php', {'mobile_no':mobile, 'status':driver_stat, 'pos':"0"}, function (results) {
                   var jsonObj = JSON.parse(results);
                   var return_code = (jsonObj.status[0].return_code);
                   var return_msg = (jsonObj.status[0].return_msg);
-
                   if (return_code == 0) {
-                      window.alert("Trip completed.");
-                      window.location.href = "home.html?status=Available";
+                      // Update the trip status.
+                      $.post(baseUrl + '/api_trip_status.php', {'who': "driver", 'mobile_no':mobile, 'trip_id': trip_id, 'status':status}, function (results) {
+                          var jsonObj = JSON.parse(results);
+                          var return_code = (jsonObj.status[0].return_code);
+                          var return_msg = (jsonObj.status[0].return_msg);
+                          
+                          if (return_code == 0) {
+                              window.alert("Trip completed.");
+                              window.location.href = "home.html?status=Available";
+                          }
+                          else {
+                              window.alert("Status change failed.");
+                          }
+                      });
                   }
                   else {
                       window.alert("Status change failed.");
                   }
               });
           }
-          
+                    
        /**
         * @constructor
        */
@@ -202,7 +218,7 @@
             var onChangeHandler = function() {
                 var new_value = document.getElementById('status-opt').value;
                 if (new_value == "EndTrip") {
-                    changeTripStatus("Complete");
+                    changeDriverTripStatus("Complete");
                 }
             };
             
