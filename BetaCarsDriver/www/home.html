@@ -38,8 +38,11 @@
           document.getElementById('status-opt').value = status;
           
           function initMap() {
-              var origPlaceId;
-              
+              navigator.geolocation.getCurrentPosition(onMapSuccess, onMapError, { enableHighAccuracy:true });               
+          }
+          
+          // Success callback for getting the coordinates.
+          var onMapSuccess = function(position) {
               var map = new google.maps.Map(document.getElementById('map'), {
                   mapTypeControl: false,
                   center: {lat: 14.5995, lng: 120.9842},
@@ -47,34 +50,36 @@
                   fullscreenControl: false
               });
               
-              navigator.geolocation.getCurrentPosition(function(position) {
-                  var pos = {
-                      lat: position.coords.latitude,
-                      lng: position.coords.longitude
-                  };
-                  map.setCenter(pos);
+              var pos = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude
+              };
+              map.setCenter(pos);
                   
-                  // Capture the origin position coordinates.
-                  origin_position = position.coords.latitude + "," + position.coords.longitude;
+              // Capture the origin position coordinates.
+              origin_position = position.coords.latitude + "," + position.coords.longitude;
                   
-                  // Use Geocoder to get current address and fill out the origin text box.
-                  var geocoder = new google.maps.Geocoder;
-                  var latlng = {lat: position.coords.latitude, lng: position.coords.longitude};
-                  geocoder.geocode({'location': latlng}, function(results, status) {
-                      if (status === 'OK') {
-                          if (results[0]) {
-                              document.getElementById('origin-input').value = results[0].formatted_address;
-                              origin_placeid = results[0].place_id;
-                          } else {
-                              window.alert('No results found.');
-                          }
+              // Use Geocoder to get current address and fill out the origin text box.
+              var geocoder = new google.maps.Geocoder;
+              var latlng = {lat: position.coords.latitude, lng: position.coords.longitude};
+              geocoder.geocode({'location': latlng}, function(results, status) {
+                  if (status === 'OK') {
+                      if (results[0]) {
+                          document.getElementById('origin-input').value = results[0].formatted_address;
+                          origin_placeid = results[0].place_id;
+                          new AutocompleteDirectionsHandler(map);
                       } else {
-                          window.alert('Geocoder failed due to ' + status);
+                          window.alert('No results found.');
                       }
-                  });
+                  } else {
+                      window.alert('Geocoder failed due to ' + status);
+                  }
               });
-              
-              new AutocompleteDirectionsHandler(map);
+          }
+          
+          // Error callback
+          function onMapError(error) {
+              window.alert("Error getting map.");
           }
           
           // Updating driver status with position.
