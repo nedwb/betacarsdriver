@@ -77,22 +77,15 @@
               });
           }
           
-          // Error callback
-          function onMapError(error) {
-              window.alert("Error getting map.");
-          }
-          
-          // Updating driver status with position.
-          function updateDriverStatusWithPos(status) {              
-              navigator.geolocation.getCurrentPosition(function(position) {
-                  var pos = {
-                      lat: position.coords.latitude,
-                      lng: position.coords.longitude
-                  };
+          var onMapSuccessUpdate = function(position) {
+              var pos = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude
+              };
                   // Capture the origin position coordinates.
                   origin_position = position.coords.latitude + "," + position.coords.longitude;
                                     
-                  $.post(baseUrl + '/api_driver_status.php', {'mobile_no':mobile, 'status':status, 'pos':origin_position}, function (results) {
+                  $.post(baseUrl + '/api_driver_status.php', {'mobile_no':mobile, 'status':"Available", 'pos':origin_position}, function (results) {
                         var jsonObj = JSON.parse(results);
                         var return_code = (jsonObj.status[0].return_code);
                         var return_msg = (jsonObj.status[0].return_msg);
@@ -130,13 +123,21 @@
                         else {
                             window.alert("Status change failed.");
                         }
-                   })
-               });
-            }
+                   });
+          }
+          // Error callback
+          function onMapError(error) {
+              window.alert("Error getting map.");
+          }
+          
+          // Updating driver status with position.
+          function updateDriverStatusWithPos() {              
+             navigator.geolocation.getCurrentPosition(onMapSuccessUpdate, onMapError, { enableHighAccuracy:true });
+          }
              
           // Updating driver status to unavailable (position not needed).
-          function updateDriverStatus(status) {                
-              $.post(baseUrl + '/api_driver_status.php', {'mobile_no':mobile, 'status':status, 'pos':'0,0'}, function (results) {
+          function updateDriverStatus() {                
+              $.post(baseUrl + '/api_driver_status.php', {'mobile_no':mobile, 'status':"Unavailable", 'pos':'0,0'}, function (results) {
                 var jsonObj = JSON.parse(results);
                 var return_code = (jsonObj.status[0].return_code);
                 var return_msg = (jsonObj.status[0].return_msg);
@@ -150,7 +151,8 @@
                 }
               }) 
           }
-                    
+          
+          
        /**
         * @constructor
        */
@@ -178,10 +180,10 @@
             var onChangeHandler = function() {
                 var new_value = document.getElementById('status-opt').value;
                 if (new_value == "Available") {
-                    updateDriverStatusWithPos(new_value);
+                    updateDriverStatusWithPos();
                 }
                 else {
-                    updateDriverStatus(new_value);
+                    updateDriverStatus();
                 }
             };
             document.getElementById('status-opt').addEventListener('change', onChangeHandler);
